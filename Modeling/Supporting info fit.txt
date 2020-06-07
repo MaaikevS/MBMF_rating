@@ -1,0 +1,41 @@
+
+dsurr.A(t,1)=c1; 	% Choice stage 1
+dsurr.A(t,2)=c2; 	% Choice stage 2
+            
+dsurr.S(t,1)=1; 	% State stage 1
+dsurr.S(t,2)=s2-1; 	% State stage 2
+            
+dsurr.R(t,1)=r; 	% win or lose
+
+dsurr.trans(t,1)=trans(t);  % transition (1 = common)
+Surrogate data is generated with the estimated parameters during the model fitting procedure.
+The fit file includes the fitted (transformed) parameters in results, the model properties in model,
+surrogate data (30 simulations per subject) and realdata.
+            
+dsurr.Qmb_chosen(t,1) 			% MB value Stage 1 chosen option      
+dsurr.Qmb_unchosen(t,1) 		% MB value Stage 1 unchosen option
+            
+dsurr.Qmf_chosen(t,1) 			% MF value Stage 1 chosen option
+dsurr.Qmf_unchosen(t,1) 		% MB value Stage 1 unchosen option
+            
+dsurr.Qmb_new_chosen(t,1) 		% new MB value Stage 1 chosen option after update stage 2 (value used on t+1)
+dsurr.Qmb_new_unchosen(t,1) 		% new MB value Stage 1 unchosen option after update stage 2 (value used on t+1)
+            
+dsurr.Qs2_chosen(t,1) 			% value of stage 2 choice
+dsurr.Qs2_unchosen(t,1) 		% value of stage 2 option not chosen
+           
+dsurr.winState(t,1) 			% state with highest prob to obtain reward
+dsurr.bestStateChosen(t,1) 	  	% did participant end up in best state
+dsurr.bestS1choice(t,1) 		% if transition was common and participant ended up in winstate, best choice is c1.
+					% else, choice is the other option
+
+dsurr.RPE1(t,1) = r - Qmb_chosen		% RPE MB
+dsurr.RPE2(t,1) = r - Qmf_chosen		% RPE MF stage 1
+dsurr.RPE3(t,1) = Qs2_chosen - Qmf_chosen	% RPE MF (model-based) - used in original model
+
+dsurr.RPE4(t,1) = r - Qmb_new_chosen		% RPE MB "retrospective"
+dsurr.RPE5(t,1) = r - Qs2_chosen		% RPE MF stage 2 - used in original model
+dsurr.RPE6(t,1) = RPE2 + RPE3;			% RPE MF combined
+
+dsurr.RPE7(t,1) = r - Qmb(dsurr.bestS1choice(t,1)); 	% RPE MB that would have led to win state
+dsurr.RPE8(t,1) = r - Qmf(dsurr.bestS1choice(t,1));	% RPE MF that would have lef to win state
