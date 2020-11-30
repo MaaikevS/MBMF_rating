@@ -122,10 +122,14 @@ for sub = 1:nsub
     normratings = tiedrank (normratingz);
 
     % Compute average rating for each transition and reward
-    AvRating(sub,1)= nanmean(normratings(commonC == 1 & woncs == 1));
-    AvRating(sub,2)= nanmean(normratings(commonC == 0 & woncs == 1));
-    AvRating(sub,3)= nanmean(normratings(commonC == 1 & woncs == 0));
-    AvRating(sub,4)= nanmean(normratings(commonC == 0 & woncs == 0));
+    AvRating(sub,1)= nanmean(normratings(commonC == 1 & woncs == 1 & ...
+        last_chosen_distance < 10 & last_chosen_distance < last_unchosen_distance));
+    AvRating(sub,2)= nanmean(normratings(commonC == 0 & woncs == 1 & ...
+        last_chosen_distance < 10 & last_chosen_distance < last_unchosen_distance));
+    AvRating(sub,3)= nanmean(normratings(commonC == 1 & woncs == 0 & ...
+        last_chosen_distance < 10 & last_chosen_distance < last_unchosen_distance));
+    AvRating(sub,4)= nanmean(normratings(commonC == 0 & woncs == 0 & ...
+        last_chosen_distance < 10 & last_chosen_distance < last_unchosen_distance));
 
     % Effect of attention on stay behaviour for each transition and reward
     % Substract the trials without attention to assess the effect of the
@@ -169,6 +173,9 @@ mb = (rr(:,1) - rr(:,2)) - (rr(:,3) - rr(:,4));
 mf = (rr(:,1) + rr(:,2)) - (rr(:,3) + rr(:,4));
 mbs = rrs(:,1,:) - rrs(:,2,:) - (rrs(:,3,:) - rrs(:,4,:));
 mfs = rrs(:,1,:) + rrs(:,2,:) - (rrs(:,3,:) + rrs(:,4,:));
+mb_rating = (AvRating(:,1) - AvRating(:,2)) - (AvRating(:,3) - AvRating(:,4));
+mf_rating = (AvRating(:,1) + AvRating(:,2)) - (AvRating(:,3) + AvRating(:,4));
+
 
 stayData = rr;
 staySim = squeeze(nanmean(rrs(:,:,:),3));
@@ -245,7 +252,7 @@ if toplot   % plot the data
     end
     box(axes2,'on');
     set(axes2,'XTick',[1 2],'XTickLabel',{'Rewarded','Unrewarded'});
-    set(axes2,'Ylim',[110 150], 'YTick',[110 120 130 140 150]);
+    set(axes2,'Ylim',[110 170], 'YTick',[110 120 130 140 150 160 170]);
     ylabel('Rating');
     title('Ratings');
 
@@ -311,6 +318,8 @@ output.Attention    = AvAttention;
 output.Location     = stayLocation;
 output.MB           = mb;
 output.MF           = mf;
+output.MBrating     = mb_rating;
+output.MFrating     = mf_rating;
 output.MBsim        = squeeze(nanmean(mbs,3));
 output.MFsim        = squeeze(nanmean(mfs,3));
 end

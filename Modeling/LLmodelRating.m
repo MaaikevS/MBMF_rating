@@ -1,29 +1,31 @@
 function [LL, N, dsurr] = LLmodelRating(y,D,opts)
 
-    % Find parameters estimates for original reduced model with 5
-    % parameters. Learning rates and softmax parameteres for stage 1 and 2 
-    % are assumed to be the same.
-    % Transition probabilities are associated with colour. Shapes presented
-    % at stage 1 are irrelevant, but have acquired value measured through 
-    % rating. Optimise model to account for this.
-    %
-    % USAGE: [LL, N,dsurr] = LLmodelRating(y,data,opts)
-    %
-    % INPUTS:
-    % Free parameters (y):
-    %   b1          = y(1);
-    %   b2          = y(1);
-    %   alpha 1     = y(2);
-    %   alpha 2     = y(2);
-    %   lambda      = y(3);
-    %   omega       = y(4);
-    %   pi          = y(5);
+% Find parameters estimates for original reduced model with 5
+% parameters. Learning rates and softmax parameteres for stage 1 and 2 
+% are assumed to be the same.
+% Transition probabilities are associated with colour. Shapes presented
+% at stage 1 are irrelevant, but have acquired value measured through 
+% rating. Optimise model to account for this.
+%
+% USAGE: [LL, N,dsurr] = LLmodelRating(y,data,opts)
+%
+% INPUTS:
+% Free parameters (y):
+%   b1          = y(1);
+%   b2          = y(1);
+%   alpha 1     = y(2);
+%   alpha 2     = y(2);
+%   lambda      = y(3);
+%   omega       = y(4);
+%   pi          = y(5);
 
-    %
-    % OUTPUTS:
-    %   LL          = Log likelihood 
-    %   N           = number of trials
-    %   dsurr       = latent variables
+%
+% OUTPUTS:
+%   LL          = Log likelihood 
+%   N           = number of trials
+%   dsurr       = latent variables
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     N = D.Nch;
     LL = 0;
@@ -53,6 +55,7 @@ function [LL, N, dsurr] = LLmodelRating(y,D,opts)
             Qd = zeros(3,2);            % Q(s,a): state-action value function for Q-learning
             M = [0 0];
             count = zeros(2);
+            Qr = [0 0];
         end   
         
         % Break if trial was missed
@@ -97,6 +100,14 @@ function [LL, N, dsurr] = LLmodelRating(y,D,opts)
         Qd(s2,c2) = Qd(s2,c2) + alpha2 * dtQ(2);                % update TD value function
         Qd(s1,c1) = Qd(s1,c1) + lambda * alpha1 * dtQ(2);       % eligibility trace
 
+        if s2 == 2 % common
+            RPE11 =(r - Qr(c1)); 
+            Qr(c1) = Qr(c1) + alpha1 * (r - Qr(c1));
+        else % rare
+            RPE11 = (r - Qr(3- c1));
+            Qr(3-c1) = Qr(3-c1) + alpha1 * (r - Qr(3- c1));
+        end
+
         count(s2-1,c1) =  count(s2-1,c1)+1;
         
         M = [0 0];
@@ -136,6 +147,9 @@ function [LL, N, dsurr] = LLmodelRating(y,D,opts)
             dsurr.RPE6(t,1) = (Qd(s2,c2) - Qd(1,c1)) +  (r - Qd(1,c1)); % RPE MF combined
             dsurr.RPE7(t,1) = r - Qm(dsurr.bestS1choice(t,1));  % RPE MB that would have led to win state
             dsurr.RPE8(t,1) = r - Qd(1,dsurr.bestS1choice(t,1));% RPE MF that would have lef to win state
+            dsurr.RPE9(t,1) = r - Qm(s2-1);                     % RPE MB of choice that had greatest likelihood of leading to current state
+            dsurr.RPE10(t,1) = r - Qd(1,s2-1);                  % RPE MB of choice that had greatest likelihood of leading to current state
+            dsurr.RPE11(t,1) = RPE11;                           % RPE10*
             dsurr.TruePar(1,:) = y;                             % Parameters used 
             dsurr.Nch(1) = N;                                   % number of trials
         end
